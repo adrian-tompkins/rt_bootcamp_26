@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-dbutils.fs.head("/Volumes/lakehouse_labs/hrio_ppa_developers_bootcamp/lab/gym/part-00000-tid-1852474742045174727-9d06a407-c09f-4ddd-9354-a7403500e8d1-146-1-c000.json")
+dbutils.fs.head("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/part-00000-tid-3555783547547213781-6601ada3-2ea1-43ff-bb50-d2c348f72f77-7810-1-c000.json")
 
 # COMMAND ----------
 
@@ -27,7 +27,7 @@ dbutils.fs.head("/Volumes/lakehouse_labs/hrio_ppa_developers_bootcamp/lab/gym/pa
 
 # COMMAND ----------
 
-spark.read.json("/Volumes/lakehouse_labs/hrio_ppa_developers_bootcamp/lab/gym/").display()
+spark.read.json("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/").display()
 
 # COMMAND ----------
 
@@ -41,7 +41,7 @@ spark.read.json("/Volumes/lakehouse_labs/hrio_ppa_developers_bootcamp/lab/gym/")
 
 # MAGIC %sql
 # MAGIC select distinct topic 
-# MAGIC from json.`/Volumes/lakehouse_labs/hrio_ppa_developers_bootcamp/lab/gym/`
+# MAGIC from json.`/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/`
 
 # COMMAND ----------
 
@@ -53,7 +53,7 @@ spark.read.json("/Volumes/lakehouse_labs/hrio_ppa_developers_bootcamp/lab/gym/")
 import pyspark.sql.functions as F
 df_bpm = (spark.read
  .schema("key BINARY, value BINARY, topic STRING, partition LONG, offset LONG, timestamp LONG")
- .json("/Volumes/lakehouse_labs/hrio_ppa_developers_bootcamp/lab/gym/")
+ .json("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/")
  .filter(F.col("topic") == "bpm")
  .withColumn("value", F.col("value").cast("string"))
 )

@@ -74,8 +74,8 @@ def bronze():
       spark.readStream
         .format("cloudFiles")
         .option("cloudFiles.format", "json")
-        .schema(<TODO: Define the schema>)
-        .load(<TODO: Define the source>)
+        .schema("key BINARY, value BINARY, topic STRING, partition LONG, offset LONG, timestamp LONG")
+        .load("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/")
     )
 
 # COMMAND ----------
@@ -95,7 +95,6 @@ def bronze():
 
 bpm_schema = "device_id INT, time FLOAT, heartrate DOUBLE"
 
-"""
 @dlt.table(
     table_properties={"quality": "bronze"},
     name=f"{table_prefix}_bpm_bronze"
@@ -103,9 +102,10 @@ bpm_schema = "device_id INT, time FLOAT, heartrate DOUBLE"
 def bpm_bronze():
     return (
         dlt.read_stream(f"{table_prefix}_bronze")
-          <TODO: Filter, prase and flatten fields>
+          .filter("topic = 'bpm'")
+          .select(F.from_json(F.col("value").cast("string"), bpm_schema).alias("v"))
+          .select("v.*")
         )
-"""
 
 # COMMAND ----------
 
@@ -131,9 +131,8 @@ def bpm_bronze():
 
 # COMMAND ----------
 
-"""
 rules = {
-  <TODO: Define the rule(s)>
+  "valid_id": "device_id IS NOT NULL and device_id >= 102000"
 }
 
 @dlt.table(
@@ -144,11 +143,10 @@ rules = {
 def bpm_silver():
     return (
         dlt.read_stream(f"{table_prefix}_bpm_bronze")
-          .select(<TODO: parse and flatten json>)
-          .withWatermark("timestamp", "30 seconds") # What's this? Ask the assistant to explain!
-          .<TODO: drop duplicates in the stream>
+          .select("device_id", F.col("time").cast("timestamp").alias("timestamp"), "heartrate")
+          .withWatermark("timestamp", "30 seconds")
+          .dropDuplicates(["device_id", "timestamp"])
     )
-"""
 
 # COMMAND ----------
 
@@ -157,18 +155,18 @@ def bpm_silver():
 # MAGIC ## Step 4: Quarantine Invalid Records
 # MAGIC
 # MAGIC Implement a **`bpm_quarantine`** table for invalid records from **`bpm_bronze`**.
-# MAGIC Use [the documentation](https://docs.databricks.com/aws/en/dlt/expectation-patterns?language=Python%C2%A0Module#quarantine-invalid-records) for inspiration.
 
 # COMMAND ----------
 
-"""
-quarantine_rules = <TODO: Define the rules>
+quarantine_rules = {"invalid_record": f"NOT({' AND '.join(rules.values())})"}
 @dlt.table(
     name=f"{table_prefix}_bpm_quarantine"
 )
-
-<TODO: complete the table definition>
-"""
+@dlt.expect_all_or_drop(quarantine_rules)
+def bpm_quarantine():
+    return (
+        dlt.read_stream(f"{table_prefix}_bpm_bronze")    
+    )
 
 # COMMAND ----------
 
