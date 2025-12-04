@@ -1,11 +1,10 @@
 from pyspark import pipelines as dp
 import pyspark.sql.functions as F
 
-
 @dp.table()
 def sdp_bpm_bronze():
     return (
-        dp.read_stream(f"{table_prefix}_bronze")
+        dp.read_stream("sdp_bronze")
           .filter("topic = 'bpm'")
           .select(F.from_json(F.col("value").cast("string"), "device_id INT, time FLOAT, heartrate DOUBLE").alias("v"))
           .select("v.*")
@@ -19,7 +18,7 @@ rules = {
 @dp.expect_all_or_drop(rules)
 def sdp_bpm_silver():
     return (
-        dp.read_stream(f"{table_prefix}_bpm_bronze")
+        dp.read_stream("sdp_bpm_bronze")
           .select("device_id", F.col("time").cast("timestamp").alias("timestamp"), "heartrate")
           .withWatermark("timestamp", "30 seconds")
           .dropDuplicates(["device_id", "timestamp"])

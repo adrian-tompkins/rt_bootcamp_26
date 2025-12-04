@@ -9,178 +9,239 @@
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC # Lab 2: Spark Declarative Pipelines
 # MAGIC
+# MAGIC ## Objective
+# MAGIC In this lab, you will create and configure a Databricks Spark Declactive pipeline to ingest and transform our gym data from Lab 1. This time, we will support _streaming_, bringing the data incrementally, which allows near real time processing of data once it lands!
 # MAGIC
-# MAGIC # Streaming ETL Lab
-# MAGIC ## Process BPM, Workouts, User Info
-# MAGIC
-# MAGIC In this lab, you will configure a query to consume and parse raw data from a different topics as it lands in a multiplex bronze table. You'll also validate and quarantine these records before loading them into silver tables.
-# MAGIC
-# MAGIC ## Learning Objectives
-# MAGIC By the end of this lesson, you should be able to:
-# MAGIC - Describe how filters are applied to streaming jobs
-# MAGIC - Use built-in functions to flatten nested JSON data
-# MAGIC - Parse and save binary-encoded strings to native types
-# MAGIC - Describe and implement a quarantine table
-# MAGIC
-# MAGIC ## Hint
-# MAGIC
-# MAGIC Each step of this lab has you define one additional table in the pipeline. Work on this lab one step at a time. Once you think you have a step implemented, run the pipeline to verify whether the table has the correct results. If not, update the code in this notebook. Then in the Pipeline interface, select only the table you're working on for a refresh, and perform a **full refresh** on that table.
-
-# COMMAND ----------
-
-import dlt
-import pyspark.sql.functions as F
-
-# Under pipeline settings -> configuration, add a unique table prefix (eg <firstname>_<lastname>)
-table_prefix = spark.conf.get("table_prefix").strip()
-
-assert table_prefix is not None and table_prefix != ""
 
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Step 1: Stage Source Data
 # MAGIC
-# MAGIC
-# MAGIC
-# MAGIC ## Step 1: Auto Load Raw Json Data into Multiplex Bronze
-# MAGIC
-# MAGIC The chief architect has decided that rather than connecting directly to Kafka, a source system will send raw records as JSON files to cloud object storage. We will need toingest these records with Auto Loader and store the entire history of this incremental feed. The initial table will store data from all of our topics and have the following schema. 
-# MAGIC
-# MAGIC | Field | Type |
-# MAGIC | --- | --- |
-# MAGIC | key | BINARY |
-# MAGIC | value | BINARY |
-# MAGIC | topic | STRING |
-# MAGIC | partition | LONG |
-# MAGIC | offset | LONG
-# MAGIC | timestamp | LONG |
-# MAGIC
-# MAGIC This single table will drive the majority of the data through the target architecture, feeding three interdependent data pipelines.
-# MAGIC
-# MAGIC <!-- <img src="https://files.training.databricks.com/images/ade/ADE_arch_bronze.png" width="60%" /> -->
-# MAGIC
-# MAGIC **NOTE**: Details on additional configurations for connecting to Kafka are available <a href="https://docs.databricks.com/spark/latest/structured-streaming/kafka.html" target="_blank">here</a>.
-# MAGIC
-
-# COMMAND ----------
-
-@dlt.table(
-    table_properties={"quality": "bronze"},
-    name=f"{table_prefix}_bronze"
-)
-def bronze():
-    return (
-      spark.readStream
-        .format("cloudFiles")
-        .option("cloudFiles.format", "json")
-        .schema("key BINARY, value BINARY, topic STRING, partition LONG, offset LONG, timestamp LONG")
-        .load("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/")
-    )
+# MAGIC In Lab 1, we used the entirety of our dataset `/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/` and ingested it all at once. But now we are going ot simulate this data being incrementally landed. To do this, we will create a volume in our own schema and create a function that populates it incrementally when run.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC ## Step 2: Stream BPM from Multiplex Bronze
-# MAGIC
-# MAGIC Stream records for the **`bpm`** topic from the multiplex bronze table to create a **`bpm_bronze`** table.
-# MAGIC 1. Start a stream against the **`bronze`** table
-# MAGIC 1. Filter all records by **`topic = 'bpm'`**
-# MAGIC 1. Parse and flatten JSON fields
+# MAGIC First lets set the default location to be our catalog and schema
 
 # COMMAND ----------
 
-bpm_schema = "device_id INT, time FLOAT, heartrate DOUBLE"
+user = spark.sql("select current_user()").collect()[0][0]
+user = user.split('@')[0]
+user = ''.join([c if c.isalnum() else '_' for c in user.lower()])
 
-@dlt.table(
-    table_properties={"quality": "bronze"},
-    name=f"{table_prefix}_bpm_bronze"
-)
-def bpm_bronze():
-    return (
-        dlt.read_stream(f"{table_prefix}_bronze")
-          .filter("topic = 'bpm'")
-          .select(F.from_json(F.col("value").cast("string"), bpm_schema).alias("v"))
-          .select("v.*")
-        )
+spark.sql("use catalog rtlh_lakehouse_labs")
+spark.sql(f"use schema labs_{user}")
+
+print(f"Default location: {spark.sql('select current_catalog()').collect()[0][0]}.{spark.sql('select current_schema()').collect()[0][0]}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-# MAGIC ## Step 3: Promote BPM to Silver
-# MAGIC
-# MAGIC Process BPM bronze data into a **`bpm_silver`** table with the following schema.
-# MAGIC
-# MAGIC | field | type |
-# MAGIC | --- | --- |
-# MAGIC | device_id | INT | 
-# MAGIC | timestamp | TIMESTAMP | 
-# MAGIC | heartrate | DOUBLE |
-# MAGIC
-# MAGIC We know that our devices and pipelines can cause duplicate data, so we should cleanse that.
-# MAGIC Also, our production device id's start from `102000`, eveything below that Id is a test device. Test devices shouldn't be part of our ingested, production data, but sometimes these devices accidently get registered to the live system. We will add this as a data quality check.
-# MAGIC
-# MAGIC Validate and promote records from **`bpm_bronze`** to silver by implementing a **`bpm_silver`** table.
-# MAGIC 1. Check that **`device_id`** field is not null and equal or above 102000
-# MAGIC 1. Cast **`time`** to timestamp field named **`timestamp`**
-# MAGIC 1. Deduplicate on **`device_id`** and **`time`**
+# MAGIC Now we need to create a volume
 
 # COMMAND ----------
 
-rules = {
-  "valid_id": "device_id IS NOT NULL and device_id >= 102000"
-}
-
-@dlt.table(
-    table_properties={"quality": "silver"},
-    name=f"{table_prefix}_bpm_silver"
-)
-@dlt.expect_all_or_drop(rules)
-def bpm_silver():
-    return (
-        dlt.read_stream(f"{table_prefix}_bpm_bronze")
-          .select("device_id", F.col("time").cast("timestamp").alias("timestamp"), "heartrate")
-          .withWatermark("timestamp", "30 seconds")
-          .dropDuplicates(["device_id", "timestamp"])
-    )
+# MAGIC %sql
+# MAGIC drop volume if exists lab2; --cleanup the lab2 volume if we ran this previously
+# MAGIC create volume lab2;
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-# MAGIC ## Step 4: Quarantine Invalid Records
-# MAGIC
-# MAGIC Implement a **`bpm_quarantine`** table for invalid records from **`bpm_bronze`**.
+# MAGIC Let's create a function that can copy N rows at a time from our source, simulating and incremental load
 
 # COMMAND ----------
 
-quarantine_rules = {"invalid_record": f"NOT({' AND '.join(rules.values())})"}
-@dlt.table(
-    name=f"{table_prefix}_bpm_quarantine"
-)
-@dlt.expect_all_or_drop(quarantine_rules)
-def bpm_quarantine():
-    return (
-        dlt.read_stream(f"{table_prefix}_bpm_bronze")    
-    )
+import os
+
+def copy_next_n_rows(
+  n,
+  source_table="bootcamp_oct_2025.lab2_bronze",
+  dest_path=f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/gym"):
+    
+    df = spark.table(source_table)
+
+    # Find latest timestamp in destination
+    dest_exists = os.path.exists(dest_path)
+    dest_files = os.listdir(dest_path) if dest_exists else []
+    if dest_files:
+        dest_df = spark.read.json(dest_path)
+        if dest_df.count() > 0:
+            last_ts = dest_df.agg({"timestamp": "max"}).collect()[0][0]
+        else:
+            last_ts = None
+    else:
+        last_ts = None
+
+    # Filter for next N rows after last_ts
+    if last_ts:
+        next_rows = df.filter(df.timestamp > last_ts).orderBy("timestamp").limit(n)
+    else:
+        next_rows = df.orderBy("timestamp").limit(n)
+    
+    # If nothing to write, exit
+    if next_rows.count() == 0:
+        print("No new rows to copy.")
+        return
+    
+    # Write as JSON, append mode, preserve format
+    next_rows.write.mode("append").json(dest_path)
+    print(f"Copied {next_rows.count()} rows to {dest_path}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-# MAGIC ## Step 5 & Beyond: Adding Workouts & User Info
-# MAGIC
-# MAGIC Now add similar pipelines for Workout and User Info data! Use the exploration notebook to help understand the datasets, and the other pipleine tables that you have built as a starting point.
+# MAGIC Now call the function for 100 rows
+
+# COMMAND ----------
+
+copy_next_n_rows(100)
 
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC Validate 100 rows were copied
+
+# COMMAND ----------
+
+spark.read.json(f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/gym").count()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Lets look at the files to validate its json data.
+
+# COMMAND ----------
+
+spark.createDataFrame(dbutils.fs.ls(f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/gym")).filter("name like '%.json'").display()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Let's copy another 1000 rows
+
+# COMMAND ----------
+
+copy_next_n_rows(1000)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC We should now have 1100 rows
+
+# COMMAND ----------
+
+spark.read.json(f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/gym").count()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Great, we now have a function `copy_next_n_rows` that we can use to simulate newly arriving data.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Step 2: Create a Spark Declarative Pipeline
 # MAGIC
-# MAGIC &copy; 2025 Databricks, Inc. All rights reserved. Apache, Apache Spark, Spark, the Spark Logo, Apache Iceberg, Iceberg, and the Apache Iceberg logo are trademarks of the <a href="https://www.apache.org/" target="blank">Apache Software Foundation</a>.<br/>
-# MAGIC <br/><a href="https://databricks.com/privacy-policy" target="blank">Privacy Policy</a> | 
-# MAGIC <a href="https://databricks.com/terms-of-use" target="blank">Terms of Use</a> | 
-# MAGIC <a href="https://help.databricks.com/" target="blank">Support</a>
+# MAGIC The pipeline code for processing the `bpm` data has already been written in the `Pipeline` folder. To ingest this with the Spark Declarative Pipeline framework, we will need to create the pipeline in Databricks.
+# MAGIC
+# MAGIC Navigate to **Jobs & Pipelines** and create an ETL pipeline
+# MAGIC
+# MAGIC ![Create Pipeline](./Includes/images/lab2/1_create_pipeline.png)
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Give it a name, choose the `rtlh_lakehouse_labs` catalog and your personal schema as the default table location.
+# MAGIC
+# MAGIC Select "Add existing assets" 
+# MAGIC
+# MAGIC
+# MAGIC ![Setup Pipeline](./Includes/images/lab2/2_setup_pipeline.png)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Now we need to define the code that forms the contents of the pipeline.
+# MAGIC
+# MAGIC The first entry defines your root folder. Note that the contents of this folder won't be treated as pipeline code by default. The contents here may contain a mix of exploratory notebooks along with active pipeline code. In this box, select the folder **Data Engineering with Lakeflow** as the root of the project.
+# MAGIC
+# MAGIC The second box defines where your active pipeline code lives. Everything in here will be treated as pipeline code that can be executed by SDP. Add the **Pipeline** folder to this.
+# MAGIC
+# MAGIC
+# MAGIC ![Setup Pipeline](./Includes/images/lab2/3_add_assets.png)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC **Your pipeline should now be created!**
+# MAGIC
+# MAGIC But we are not finished yet. Remember how our `copy_next_n_rows` function writes data to our staging location? We need to tell our pipeline about this. Take a look at the `.\Pipeline\ingest.py` file. You should see that we are using the `user` config attribute to tell the pipeline about our unique schema for this lab
+# MAGIC
+# MAGIC `user = spark.conf.get("user")`
+# MAGIC
+# MAGIC To configure this, open the settings of the pipeline, and add a configuration for user.
+# MAGIC
+# MAGIC
+# MAGIC
+# MAGIC ![Open Settings](./Includes/images/lab2/4_open_settings.png)
+# MAGIC
+# MAGIC ![Settings](./Includes/images/lab2/5_settings.png)
+# MAGIC
+# MAGIC ![Configuration](./Includes/images/lab2/6_config.png)
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Step 3: Run the Pipeline!
+# MAGIC
+# MAGIC Now it's time to run the pipeline! Press the **Run Pipeline** button and see what happens!
+# MAGIC
+# MAGIC You should have 3 tables created by the pipeline. Now take some time getting familiar with the interface and the pipeline code so you can understand how everything works.
+# MAGIC
+# MAGIC **LAB EXERCISE**
+# MAGIC
+# MAGIC See if you can answer the following questions
+# MAGIC  - Can you find the visual DAG that gets created?
+# MAGIC  - Where can you see the compute for the pipeline?
+# MAGIC  - Can you find the streaming tables in the catalog?
+# MAGIC  - How many rows were ingested? Did it match the number of rows you staged (1100)?
+# MAGIC  - Did the pipeline have any dropped records because of failed expectations?
+# MAGIC  - Where can you find the code for the tables?
+# MAGIC  - How did we manage the requirement of device ids being over 102000
+# MAGIC  - Did you see we are ingesting data with "cloudfetch"? What is this, and what does it do?
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Step 4: Ingest More Data
+# MAGIC
+# MAGIC Now lets demonstrait how we can incrementally ingest data. Run the below command to ingest some more rows, then re-run the pipeline. Notice how the pipeline streaming tables incrementally ingest new rows?
+
+# COMMAND ----------
+
+copy_next_n_rows(1000) # feel free to update the number of rows to stage at a time if desired!
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC **LAB EXERCISE**
+# MAGIC - We are manually pressing the "Run Pipeline" button, but how could you update your pipline to always ingest data as soon as its available?
+# MAGIC - What if you had a requirement to only ingest new data daily? How would you do that?
+# MAGIC - In the pipeline code, can you find what's causing the pipeline tables to be streaming tables?
+# MAGIC - Can you add another table to the pipeline that calculates the average bpm per user? What happens if you create this with `read` instead of `readStream`?
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Step 5: Build the Workout and User Info Tables
+# MAGIC
+# MAGIC Have a go at extending the pipeline so that we build the silver and bronze `workout` and `user_info` tables. Use tools like exploration notebooks and the assistant to help you out.
