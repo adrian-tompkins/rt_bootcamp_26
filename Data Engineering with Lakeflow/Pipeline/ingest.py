@@ -1,16 +1,9 @@
 from pyspark import pipelines as dp
 import pyspark.sql.functions as F
 
-# Under pipeline settings -> configuration, add a unique table prefix (eg <firstname>_<lastname>)
-table_prefix = spark.conf.get("table_prefix").strip()
-
-assert table_prefix is not None and table_prefix != ""
-
-@dp.table(
-    table_properties={"quality": "bronze"},
-    name=f"{table_prefix}_bronze"
-)
-def bronze():
+# Step 1: Auto Load Raw JSON Data into Multiplex Bronze
+@dp.table()
+def sdp_bronze():
     return (
       spark.readStream
         .format("cloudFiles")
