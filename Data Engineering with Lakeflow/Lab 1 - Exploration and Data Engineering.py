@@ -252,7 +252,7 @@ df_bronze_bpm.display()
 
 # COMMAND ----------
 
-df_bronze_bpm.write.mode("overwirte").saveAsTable("bpm_bronze")
+df_bronze_bpm.write.mode("overwrite").saveAsTable("bpm_bronze")
 
 # COMMAND ----------
 
