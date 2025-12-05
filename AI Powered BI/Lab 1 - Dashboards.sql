@@ -74,7 +74,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC To use the Catalog Explorer, follow the steps below.
 -- MAGIC
 -- MAGIC 1. Select **Catalog** from the sidebar navigation.
--- MAGIC 1. In the catalog selector, locate the catalog titled: **lakehouse_labs**. You can also use the search at the top to narrow down the available options.
+-- MAGIC 1. In the catalog selector, locate the catalog titled: **rtlh_lakehouse_labs**. You can also use the search at the top to narrow down the available options.
 -- MAGIC 1. Expand your schema. You should see three tables in this schema.
 -- MAGIC     - au_orders
 -- MAGIC     - au_opportunities
@@ -156,7 +156,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC 1. In the Assistant chat box, describe the SQL query you need. 
 -- MAGIC  Specifically: 
 -- MAGIC  
--- MAGIC     You want a query that returns all the fields in **lakehouse_labs.hrio_ppa_developers_bootcamp.au_orders**, plus the customername, city, and state fields from *lakehouse_labs.hrio_ppa_developers_bootcamp.au_customers**, joining those two tables on the **customerid** field. You also want to pull in the **productname** field from **lakehouse_labs.hrio_ppa_developers_bootcamp.au_products**, joining those two tables on the **product** field. The customer's state should be called **customer_state**.
+-- MAGIC     You want a query that returns all the fields in **rtlh_lakehouse_labs.hrio_ppa_developers_bootcamp.au_orders**, plus the customername, city, and state fields from *rtlh_lakehouse_labs.hrio_ppa_developers_bootcamp.au_customers**, joining those two tables on the **customerid** field. You also want to pull in the **productname** field from **rtlh_lakehouse_labs.hrio_ppa_developers_bootcamp.au_products**, joining those two tables on the **product** field. The customer's state should be called **customer_state**.
 -- MAGIC
 -- MAGIC      Feel free to use the above query description or rewrite it in your own words.
 -- MAGIC

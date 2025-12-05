@@ -94,7 +94,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC 1. Navigate to **Genie** in the left-side navigation of the platform. (It is recommended to right-click and select Open Link in New Window or Tab)
 -- MAGIC
 -- MAGIC 1. Click **+ New** in the upper right corner.
--- MAGIC 1. You'll be presented with the **Connect your data** dialogue box. Click **All** and navigate to lakehouse_labs.hrio_ppa_developers_bootcamp and select the following four tables: 
+-- MAGIC 1. You'll be presented with the **Connect your data** dialogue box. Click **All** and navigate to rtlh_lakehouse_labs.hrio_ppa_developers_bootcamp and select the following four tables: 
 -- MAGIC       - au_customers
 -- MAGIC       - au_orders
 -- MAGIC       - au_opportunities
