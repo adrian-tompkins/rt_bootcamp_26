@@ -84,7 +84,9 @@ spark.read.json("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/g
 # MAGIC
 # MAGIC **LAB EXERCISE**
 # MAGIC
-# MAGIC Complete the below code to show the distinct topics avialable in the source data. If you get stuck, you can use the inline-assistant for help. Just look for the assistant icon in the cell (next to the delete cell icon). 
+# MAGIC Complete the below code to show the distinct topics avialable in the source data. If you get stuck, you can use the inline-assistant for help. Just look for the assistant icon in the cell (next to the delete cell icon).
+# MAGIC
+# MAGIC You may notice it takes a little while to execute this query. Why do you think this is? Later on in this lab, once you ingest this table to bronze, try re-running this query again but for the bronze table instead of the raw json data. Was it faster? Why?
 
 # COMMAND ----------
 
@@ -206,7 +208,7 @@ print(f"Default location: {spark.sql('select current_catalog()').collect()[0][0]
 
 bronze_schema = "key BINARY, value BINARY, topic STRING, partition LONG, offset LONG, timestamp LONG"
 source = "/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/"
-df_bronze = spark.read.schema(raw_schema).json(source)
+df_bronze = spark.read.schema(bronze_schema).json(source)
 display(df_bronze)
 
 # COMMAND ----------
