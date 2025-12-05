@@ -14,16 +14,14 @@
 # MAGIC # Data Engineering with Databricks
 # MAGIC ## Process BPM, Workouts, User Info
 # MAGIC
-# MAGIC In this lab, you will be working with synthetic workout data from a high-tech gym. At this gym, we use wearable technology to track user details such as heart rate (bpm), workout sessions, and user profile information. This infromation is streamed in real time to our databases. Our task will be to ingest this data into Unity Catalog, first as uncleaned bronze data, then as cleaned silver data.
-# MAGIC
-# MAGIC
+# MAGIC In this lab, you will be working with synthetic workout data from a high-tech gym. At this gym, we use wearable technology to track user details such as heart rate (bpm), workout sessions, and user profile information. This infromation is streamed in real time to our databases. Our task will be to ingest this data into Unity Catalog as bronze data, split out the bpm data, and built a silver table with only quality data.
 # MAGIC
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## The Source Data
-# MAGIC In these exercises, we will be using data that has been extracted from the source database and landed in S3/ADLS as a static dataset. For our initial batch exercises, we will process this whole dataset. **TODO** For the streaming exercises, we will simulate streaming this data by loading data to an incremental staging area.
+# MAGIC In these exercises, we will be using data that has been extracted from sources and landed in S3/ADLS as a static dataset. In this Lab 1, we will process this whole dataset in one batch. In Lab 2, we will explore streaming this data incrementally instead.
 # MAGIC
 # MAGIC The raw data we are ingesting is in the json format, stored as a binary payload. Lets take a look at it...
 # MAGIC
@@ -45,7 +43,7 @@
 # MAGIC %md
 # MAGIC **LAB EXERCISE**
 # MAGIC
-# MAGIC We can see we are listing the volume contents, but What is a Volume in Databricks? Use the assistant on the far right-hand side to help answer this.
+# MAGIC We can see we are listing the volume contents, but what is a volume in Databricks? Use the assistant on the far right-hand side to help answer this.
 # MAGIC
 # MAGIC
 # MAGIC <img src="./Includes/images/assistant_side_panel.png">
@@ -69,7 +67,7 @@ dbutils.fs.head("/Volumes/<path to json file>")
 # MAGIC %md
 # MAGIC ### Exploring with Spark and SQL
 # MAGIC
-# MAGIC The head operation dumps out the raw JSON, which isn't the most user-friendly to look at. Lets use pyspark spark to read files as a table instead, and get a sense of the structure and contents
+# MAGIC The head operation dumps out the raw JSON, which isn't the most user-friendly to look at. Lets use pyspark to read files as a table instead, and get a sense of the structure and contents
 
 # COMMAND ----------
 
@@ -81,7 +79,7 @@ spark.read.json("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/g
 # MAGIC Ok, that looks much more readable. Notice how there's a column called "topic". In this data source, there is a combination of different types of data, referenced by the topic. Lets explore what topics are available.
 # MAGIC
 # MAGIC
-# MAGIC We aren't restricted to python and pyspark as a language. SQL can also be used to read and display the data. The magic `%sql` overrides the notebook's default language (python) for the cell.
+# MAGIC We aren't restricted to python and pyspark as a language. SQL can also be used to read and display the data. The magic `%sql` overrides the notebook's default language, python, for the cell. You can configure the default language for the notebook at the top of the notebook; look for the "python" toggle.
 # MAGIC
 # MAGIC
 # MAGIC **LAB EXERCISE**
@@ -130,7 +128,7 @@ df_bpm_parsed.display()
 # MAGIC %md
 # MAGIC Let's check if there's any duplicates in the data, looking at `device_id` and `time`. We will use a temporary view to inspect this using SQL from the `bmp_parsed` dataframe.
 # MAGIC
-# MAGIC We will also use the `spark.sql` function to show how we can run SQL within `pyspark`. The below SQL code will also work in a `%sql` defined cell (provided the `bpm_parsed` view was created first).
+# MAGIC We will also use the `spark.sql` function to demonstrate how to run SQL queries within `pyspark`. The SQL code below will also work in a `%sql` defined cell (provided the `bpm_parsed` view has been created first).
 # MAGIC
 # MAGIC **LAB EXERCISE**
 # MAGIC
@@ -168,20 +166,20 @@ spark.sql("""
 # MAGIC %md
 # MAGIC ## Ingest and Transform
 # MAGIC
-# MAGIC Now we have explored our data set, we will need to ingest it into a medallion structure and write it out to tables. We should create the following:
+# MAGIC Now we have explored our dataset, we will need to ingest it into a medallion structure and write it out to tables. We should create the following:
 # MAGIC
 # MAGIC - A bronze table with the raw data ingested
 # MAGIC - An additional bronze table, that splits out the bpm data
 # MAGIC - A silver table that cleans up the bpm data, dropping duplicates, and filtering out invalid records
 # MAGIC - A lakeflow job that can schedule this ingestion and transform notebook to run
-# MAGIC - If time permits: Additional bronze and silver tables that split out the `workout` data and the `user_info` data 
+# MAGIC - If time permits, additional bronze and silver tables that split out the `workout` data and the `user_info` data 
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC **Set the default catalog and schema**
 # MAGIC
-# MAGIC Unity Catalog uses a 3 level namespace: `<catalog>.<schema>.<table>`. To avoid writing the catalog and schema every time, since it will be the same, lets *use* our catalog and schema. The below code should automate this from the labs environment using your username, ie the catalog should be `rtlh_lakehouse_labs` and the schema should be `labs_<firsname>_<lastname>`
+# MAGIC Unity Catalog uses a 3 level namespace: `<catalog>.<schema>.<table>`. To avoid typing out the same catalog and schema every time, lets *use* our catalog and schema. The below code should automate this from the labs environment using your username, ie the catalog should be `rtlh_lakehouse_labs` and the schema should be `labs_<firsname>_<lastname>`
 # MAGIC
 
 # COMMAND ----------
@@ -200,9 +198,9 @@ print(f"Default location: {spark.sql('select current_catalog()').collect()[0][0]
 # MAGIC %md
 # MAGIC **Ingest the bronze data**
 # MAGIC
-# MAGIC Below, we ingest the raw data into Bronze using pyspark. First we create a pyspark `DataFrame`, then we persist this dataframe a a table to the catalog.
+# MAGIC Below, we ingest the raw data into Bronze using pyspark. First we create a pyspark `DataFrame`, then we persist this dataframe in a table to the catalog.
 # MAGIC
-# MAGIC Spark is *lazy* by nature, so expressions such as `spark.read.schema(raw_schema).json(source)` won't read all the source data by themselves. Action commands, such as `display` and `write` are the commands that will cause execution of the spark expressions.
+# MAGIC Spark is *lazy* by nature, so expressions such as `spark.read.schema(raw_schema).json(source)` won't read all the source data by themselves. Actions such as `display` and `write` are the commands that will cause execution of the spark expressions.
 
 # COMMAND ----------
 
@@ -214,15 +212,23 @@ display(df_bronze)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Write the dataframe out to a table called bronze. 
-# MAGIC
+# MAGIC Next we write out the dataframe to a table called bronze. 
+
+# COMMAND ----------
+
+df_bronze.write.mode("overwrite").saveAsTable("bronze")
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC **Lab Exercise**
 # MAGIC
 # MAGIC What is *mode* doing here? Why do you think we setting this to *overwrite*? What would happen if we used *append* instead?
 
 # COMMAND ----------
 
-df_bronze.write.mode("overwrite").saveAsTable("bronze")
+# MAGIC %md
+# MAGIC Let's take a look at the table we wrote out. It should be the same as the dataframe.
 
 # COMMAND ----------
 
@@ -256,7 +262,7 @@ df_bronze_bpm.write.mode("overwirte").saveAsTable("bpm_bronze")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Now we can create the cleaned silver bpm table. This should drop duplicates from the bronze data, and only include the production devices (devices from id 102000 onwards)
+# MAGIC Next we can create the cleaned silver bpm table. This should drop duplicates from the bronze data, and only include the production devices (devices from id 102000 onwards)
 # MAGIC
 # MAGIC **Lab Exercise**
 # MAGIC
