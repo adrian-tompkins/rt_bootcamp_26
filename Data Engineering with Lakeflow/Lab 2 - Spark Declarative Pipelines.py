@@ -20,127 +20,10 @@
 # MAGIC %md
 # MAGIC ### Step 1: Stage Source Data
 # MAGIC
-# MAGIC In Lab 1, we used the entirety of our dataset `/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/` and ingested it all at once. But now we are going ot simulate this data being incrementally landed. To do this, we will create a volume in our own schema and create a function that populates it incrementally when run.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC First lets set the default location to be our catalog and schema
-
-# COMMAND ----------
-
-user = spark.sql("select current_user()").collect()[0][0]
-user = user.split('@')[0]
-user = ''.join([c if c.isalnum() else '_' for c in user.lower()])
-
-spark.sql("use catalog rtlh_lakehouse_labs")
-spark.sql(f"use schema labs_{user}")
-
-print(f"Default location: {spark.sql('select current_catalog()').collect()[0][0]}.{spark.sql('select current_schema()').collect()[0][0]}")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Now we need to create a volume
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC drop volume if exists lab2; --cleanup the lab2 volume if we ran this previously
-# MAGIC create volume lab2;
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Let's create a function that can copy N rows at a time from our source, simulating and incremental load
-
-# COMMAND ----------
-
-import os
-
-def copy_next_n_rows(
-  n,
-  source_table="bootcamp_oct_2025.lab2_bronze",
-  dest_path=f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/gym"):
-    
-    df = spark.table(source_table)
-
-    # Find latest timestamp in destination
-    dest_exists = os.path.exists(dest_path)
-    dest_files = os.listdir(dest_path) if dest_exists else []
-    if dest_files:
-        dest_df = spark.read.json(dest_path)
-        if dest_df.count() > 0:
-            last_ts = dest_df.agg({"timestamp": "max"}).collect()[0][0]
-        else:
-            last_ts = None
-    else:
-        last_ts = None
-
-    # Filter for next N rows after last_ts
-    if last_ts:
-        next_rows = df.filter(df.timestamp > last_ts).orderBy("timestamp").limit(n)
-    else:
-        next_rows = df.orderBy("timestamp").limit(n)
-    
-    # If nothing to write, exit
-    if next_rows.count() == 0:
-        print("No new rows to copy.")
-        return
-    
-    # Write as JSON, append mode, preserve format
-    next_rows.write.mode("append").json(dest_path)
-    print(f"Copied {next_rows.count()} rows to {dest_path}")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Now call the function for 100 rows
-
-# COMMAND ----------
-
-copy_next_n_rows(100)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Validate 100 rows were copied
-
-# COMMAND ----------
-
-spark.read.json(f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/gym").count()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Lets look at the files to validate its json data.
-
-# COMMAND ----------
-
-spark.createDataFrame(dbutils.fs.ls(f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/gym")).filter("name like '%.json'").display()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Let's copy another 1000 rows
-
-# COMMAND ----------
-
-copy_next_n_rows(1000)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC We should now have 1100 rows
-
-# COMMAND ----------
-
-spark.read.json(f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/gym").count()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Great, we now have a function `copy_next_n_rows` that we can use to simulate newly arriving data.
+# MAGIC In Lab 1, we used the entirety of our dataset `/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym/` and ingested it all at once. However, we will now simulate the incremental landing of this data. The lab instructor will setup a job to incrementally load 1000 rows of fresh data, every 10 seconds, to this location `/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/gym_stream/` This lab will use this new location for ingestion.
+# MAGIC
+# MAGIC **Lab Exercise**
+# MAGIC Navigate to the `resources` volume in `rtlh_lakehouse_labs.bootcamp_oct_2025` and see if you can find the `gym_stream` data.
 
 # COMMAND ----------
 
@@ -180,26 +63,6 @@ spark.read.json(f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/g
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Your pipeline should now be created!**
-# MAGIC
-# MAGIC But we are not finished yet. Remember how our `copy_next_n_rows` function writes data to our staging location? We need to tell our pipeline about this. Take a look at the `.\Pipeline\ingest.py` file. You should see that we are using the `user` config attribute to tell the pipeline about our unique schema for this lab
-# MAGIC
-# MAGIC `user = spark.conf.get("user")`
-# MAGIC
-# MAGIC To configure this, open the settings of the pipeline, and add a configuration for user.
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC ![Open Settings](./Includes/images/lab2/4_open_settings.png)
-# MAGIC
-# MAGIC ![Settings](./Includes/images/lab2/5_settings.png)
-# MAGIC
-# MAGIC ![Configuration](./Includes/images/lab2/6_config.png)
-# MAGIC
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ### Step 3: Run the Pipeline!
 # MAGIC
 # MAGIC Now it's time to run the pipeline! Press the **Run Pipeline** button and see what happens!
@@ -224,16 +87,13 @@ spark.read.json(f"/Volumes/rtlh_lakehouse_labs/labs_{user}/lab2/resources/data/g
 # MAGIC %md
 # MAGIC ### Step 4: Ingest More Data
 # MAGIC
-# MAGIC Now lets demonstrait how we can incrementally ingest data. Run the below command to ingest some more rows, then re-run the pipeline. Notice how the pipeline streaming tables incrementally ingest new rows?
-
-# COMMAND ----------
-
-copy_next_n_rows(1000) # feel free to update the number of rows to stage at a time if desired!
+# MAGIC Now let's demonstrate how we can incrementally ingest data. The instructor's job is continuously staging more data for us, so we can re-run the pipeline and new data should be loaded.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC **LAB EXERCISE**
+# MAGIC - How many new rows were ingested in the previous run?
 # MAGIC - We are manually pressing the "Run Pipeline" button, but how could you update your pipline to always ingest data as soon as its available?
 # MAGIC - What if you had a requirement to only ingest new data daily? How would you do that?
 # MAGIC - In the pipeline code, can you find what's causing the pipeline tables to be streaming tables?
