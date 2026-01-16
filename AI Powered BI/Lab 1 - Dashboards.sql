@@ -54,43 +54,22 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC
 -- MAGIC In this lesson, you will create a dashboard and make it useful by adding text, data, and interactive visualizations.
 -- MAGIC
--- MAGIC This lesson uses the following resources:
--- MAGIC - Tables:
--- MAGIC   - Catalog: `rtlh_lakehouse_labs`
--- MAGIC   - Schema: `labs_<user_name>`
--- MAGIC   - Tables:
--- MAGIC     - au_orders
--- MAGIC     - au_opportunities
--- MAGIC     - au_customers
--- MAGIC     - au_produts
--- MAGIC
--- MAGIC These tables contain simulated business-to-business order and opportunity data for an imaginary company's Australian sales operation. The **au_orders** table contains information from 2021 through the middle of November 2024, and the **au_opportunities** table contains the opportunities present in our company's Customer Relationship Management (CRM) software as of that time. Both of those tables identify the relevant customer with a unique key that points into the **au_customers** table, and both identify the relevant product with a unique key that points into the **au_products** table. You'll use the data in these tables to prepare your dashboard.
--- MAGIC
-
--- COMMAND ----------
-
--- MAGIC %md
 -- MAGIC ### Data Discovery
--- MAGIC The first thing you'll need to complete any data analytics task is the appropriate data for the request. To find the right data, you'll need to use the Catalog Explorer or the Databricks Search to locate the data for this project.  In this particular lab exercise, a setup script will copy tables from a Databricks Marketplace share into a schema you control. To get started, click the small triangle Run button in the top left of the cell below.
--- MAGIC
--- MAGIC
--- MAGIC
--- MAGIC ---
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC This script clones a few small data tables from a Databricks Marketplace share into your personal schema. At the end it prints out the name of your catalog and your schema. The schema will have a randomly generated name. Make a note of this value. In these instructions, we'll call this simply "your schema."
+-- MAGIC The first thing you'll need to complete any data analytics task is the appropriate data for the request. To find the right data, you'll need to use the Catalog Explorer or the Databricks Search to locate the data for this project. The script you ran above will copy tables from a shared common location into a schema you control.
 -- MAGIC
 -- MAGIC To use the Catalog Explorer, follow the steps below.
 -- MAGIC
 -- MAGIC 1. Select **Catalog** from the sidebar navigation.
 -- MAGIC 1. In the catalog selector, locate the catalog titled: **rtlh_lakehouse_labs**. You can also use the search at the top to narrow down the available options.
--- MAGIC 1. Expand your schema. You should see three tables in this schema.
+-- MAGIC 1. Expand your `labs_` schema. You should see following tables in this schema.
 -- MAGIC     - au_orders
 -- MAGIC     - au_opportunities
 -- MAGIC     - au_customers
 -- MAGIC     - au_products
+-- MAGIC
+-- MAGIC
+-- MAGIC These tables contain simulated business-to-business order and opportunity data for an imaginary company's Australian sales operation. The **au_orders** table contains information from 2021 through the middle of November 2024, and the **au_opportunities** table contains the opportunities present in our company's Customer Relationship Management (CRM) software as of that time. Both of those tables identify the relevant customer with a unique key that points into the **au_customers** table, and both identify the relevant product with a unique key that points into the **au_products** table. You'll use the data in these tables to prepare your dashboard.
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -167,7 +146,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC 1. In the Assistant chat box, describe the SQL query you need. 
 -- MAGIC  Specifically: 
 -- MAGIC  
--- MAGIC     You want a query that returns all the fields in **rtlh_lakehouse_labs.hrio_ppa_developers_bootcamp.au_orders**, plus the customername, city, and state fields from *rtlh_lakehouse_labs.hrio_ppa_developers_bootcamp.au_customers**, joining those two tables on the **customerid** field. You also want to pull in the **productname** field from **rtlh_lakehouse_labs.hrio_ppa_developers_bootcamp.au_products**, joining those two tables on the **product** field. The customer's state should be called **customer_state**.
+-- MAGIC     You want a query that returns all the fields in **rtlh_lakehouse_labs.\<your_schema\>.au_orders**, plus the customername, city, and state fields from *rtlh_lakehouse_labs.\<your_schema\>.au_customers**, joining those two tables on the **customerid** field. You also want to pull in the **productname** field from **rtlh_lakehouse_labs.\<your_schema\>.au_products**, joining those two tables on the **product** field. The customer's state should be called **customer_state**.
 -- MAGIC
 -- MAGIC      Feel free to use the above query description or rewrite it in your own words.
 -- MAGIC
@@ -230,9 +209,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC
 -- MAGIC     **📌 Note:** Text boxes use [Markdown](https://daringfireball.net/projects/markdown/syntax) syntax. The single `#` character in the included texts indicates that <b>Australia Sales</b> is to be styled as a level-1 heading. 
 -- MAGIC
--- MAGIC 1. On the next line, type a brief explanation of what this dashboard is for, such as "This dashboard helps you support and evaluate our Australia sales operation". Append an invitation for users to email you with feedback using Markdown's embedded-link syntax:
--- MAGIC
--- MAGIC    `[Send me feedback!](mailto:your@email.address)`
+-- MAGIC 1. On the next line, type a brief explanation of what this dashboard is for, such as "This dashboard helps you support and evaluate our Australia sales operation".
 -- MAGIC
 -- MAGIC
 -- MAGIC 1. Now open up a new line above the Australia Sales header. Here you will add a company logo. First type the Markdown syntax for an embedded image:

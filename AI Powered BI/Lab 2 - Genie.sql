@@ -56,41 +56,15 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC
 -- MAGIC In this lesson, you will create and configure a Genie space, experiment with it as if you were an end user and generate feedback, and then return to the administrator's perspective and use that feedback to enhance the space.
 -- MAGIC
--- MAGIC This lesson uses the following resources:
+-- MAGIC This lesson uses the same following resources as **Lab 1**:
 -- MAGIC - Tables:
 -- MAGIC   - Catalog: `rtlh_lakehouse_labs`
--- MAGIC   - Schema: `<my_schema>`
+-- MAGIC   - Schema: `labs_<username>`
 -- MAGIC   - Tables:
 -- MAGIC     - au_customers
 -- MAGIC     - au_orders
 -- MAGIC     - au_opportunities
 -- MAGIC     - au_products
--- MAGIC
--- MAGIC These tables contain simulated business-to-business order and opportunity data for an imaginary company's Australian sales operation. The **au_orders** table contains information from 2021 through the middle of November 2024, and the **au_opportunities** table contains the opportunities present in our company's Customer Relationship Management (CRM) software as of that time. Both of those tables identify the relevant customer with a unique key that points into the **au_customers** table, and both identify the relevant product with a unique key that points into the **au_products** table. You'll use the data in these tables to prepare your Genie space.
--- MAGIC
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC ### Data Discovery
--- MAGIC The first thing you'll need to complete any data analytics task is the appropriate data for the request. To find the right data, you'll need to use the Catalog Explorer or the Databricks Search to locate the data for this project.
--- MAGIC
--- MAGIC
--- MAGIC ---
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC To use the Databricks Catalog Explorer to see your loaded data, follow the steps below.
--- MAGIC
--- MAGIC 1. Select **Catalog** from the sidebar navigation.
--- MAGIC 1. In the catalog selector, locate the catalog titled: **rtio_lakehouse_labs**. You can also use the search at the top to narrow down the available options.
--- MAGIC 1. Expand the your schema. You should see four tables in this schema.
--- MAGIC     - au_customers
--- MAGIC     - au_orders
--- MAGIC     - au_opportunities
--- MAGIC     - au_products
--- MAGIC
 -- MAGIC
 -- MAGIC
 
@@ -105,7 +79,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC 1. Navigate to **Genie** in the left-side navigation of the platform. (It is recommended to right-click and select Open Link in New Window or Tab)
 -- MAGIC
 -- MAGIC 1. Click **+ New** in the upper right corner.
--- MAGIC 1. You'll be presented with the **Connect your data** dialogue box. Click **All** and navigate to rtlh_lakehouse_labs.hrio_ppa_developers_bootcamp and select the following four tables: 
+-- MAGIC 1. You'll be presented with the **Connect your data** dialogue box. Click **All** and navigate to rtlh_lakehouse_labs.\<your_schema\> and select the following four tables: 
 -- MAGIC       - au_customers
 -- MAGIC       - au_orders
 -- MAGIC       - au_opportunities
@@ -200,19 +174,25 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC ### E: Create a Genie Space from a Dashboard
 -- MAGIC So far, we have been working with a standalone Genie space. Alternatively, you can create a Genie Space directly from a dashboard. Let's explore that choice.
 -- MAGIC
--- MAGIC 1. Navigate to **Dashboards** in the main Databricks user interface and select a dashboard you've created during your work throughout this course. </p>
+-- MAGIC 1. Navigate to **Dashboards** in the main Databricks user interface and select your Lab 1 Dashboard. </p>
 -- MAGIC 1. Switch to **Edit Draft** for the dashboard. </p>
--- MAGIC 1. Select the kebab menu in the upper right corner, next to the **Share** option.</p>
--- MAGIC 1. Select **Open draft Genie space**.
+-- MAGIC 1. Select the kebab menu in the upper right corner, next to the **Refresh** option.</p>
+-- MAGIC 1. Navigate to **General** in the settings menu, and toggle the **Enable Genie** switch
+-- MAGIC 1. Leave the **Auto-Generate Genie Space** selected for now
+-- MAGIC 1. Re-publish your dashboard, open the published dashboard and click **Ask Genie**
 -- MAGIC 1. Ask the following question in the chatbox.
 -- MAGIC
 -- MAGIC     ```What tables are there and how are they connected? Give me a short summary.```
 -- MAGIC 1. Review the response provided by Genie. 
 -- MAGIC 1. Experiment with a few other questions, both those that ask for tabular or numeric information and those that ask for a visualization.
 -- MAGIC
--- MAGIC This Draft Genie space will not appear in the list of available Genie spaces from the main navigation menu, but will be accessible from the Draft view of the associated Dashboard. In other words, it is not a separately manageable object. Users' access rights to it will always be the same as their access rights to the associated dashboard.
+-- MAGIC This Draft Genie space will not appear in the list of available Genie spaces from the main navigation menu, but will be accessible from the Dashboard. In other words, it is not a separately manageable object. Users' access rights to it will always be the same as their access rights to the associated dashboard.
 -- MAGIC
--- MAGIC **NOTE:** This capability is currently in Preview.
+-- MAGIC Alternatively, you can **link an established Genie Space** to a Dashboard. Try updating your dashboard now so that it becomes linked to the genie space you created in this lab.
+-- MAGIC 1. Copy the URL from you Genie space
+-- MAGIC 2. Update the dashboard settings so that you choose to **Link existing Genie space**
+-- MAGIC 3. Pushbish and view your dashboard
+-- MAGIC 4. Press the **Ask Genie** button, and ask some questions.
 
 -- COMMAND ----------
 
