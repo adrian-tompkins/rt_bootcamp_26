@@ -78,6 +78,8 @@
 # MAGIC  - How many rows were ingested? Did it match the number of rows you staged (1100)?
 # MAGIC  - Did the pipeline have any dropped records because of failed expectations?
 # MAGIC  - Where can you find the code for the tables?
+# MAGIC     - Notice that we have multiple files? Splitting into multiple files is a design choice of how you want to structure your pipeline.
+# MAGIC     - Notice that we also use SQL and python? SDP supports both languages, so use whatever you prefer!
 # MAGIC  - How did we manage the requirement of device ids being over 102000
 # MAGIC  - Did you see we are ingesting data with "cloudfetch"? What is this, and what does it do?
 # MAGIC
