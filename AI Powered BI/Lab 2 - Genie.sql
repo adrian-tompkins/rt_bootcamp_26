@@ -23,11 +23,22 @@
 -- MAGIC user = ''.join([c if c.isalnum() else '_' for c in user.lower()])
 -- MAGIC
 -- MAGIC # Use the catalog rtlh_lakehouse_labs by default
--- MAGIC spark.sql("use catalog rtlh_lakehouse_labs")
+-- MAGIC catalog = "rtlh_lakehouse_labs"
 -- MAGIC
 -- MAGIC # Use your unqiue sechma, should be of the form labs_user_name
 -- MAGIC # Manually update this if your schema is not of that form
--- MAGIC spark.sql(f"use schema labs_{user}")
+-- MAGIC schema = f"labs_{user}"
+-- MAGIC
+-- MAGIC
+-- MAGIC # Use the catalog rtlh_lakehouse_labs by default
+-- MAGIC spark.sql(f"use catalog {catalog}")
+-- MAGIC
+-- MAGIC # Use your unqiue sechma, should be of the form labs_user_name
+-- MAGIC # Manually update this if your schema is not of that form
+-- MAGIC spark.sql(f"use schema {schema}")
+-- MAGIC
+-- MAGIC print(f"Catalog: {catalog}")
+-- MAGIC print(f"Schema: {schema}")
 
 -- COMMAND ----------
 
