@@ -14,7 +14,7 @@
 # MAGIC # Data Engineering with Databricks
 # MAGIC ## Process BPM, Workouts, User Info
 # MAGIC
-# MAGIC In this lab, you will be working with synthetic workout data from a high-tech gym. At this gym, we use wearable technology to track user details such as heart rate (bpm), workout sessions, and user profile information. This infromation is streamed in real time to our databases. Our task will be to ingest this data into Unity Catalog as bronze data, split out the bpm data, and built a silver table with only quality data.
+# MAGIC In this lab, you will be working with synthetic workout data from a high-tech gym. At this gym, we use wearable technology to track user details such as heart rate (bpm), workout sessions, and user profile information. This information is streamed in real time to our databases. Our task will be to ingest this data into Unity Catalog as bronze data, split out the bpm data, and built a silver table with only quality data.
 # MAGIC
 
 # COMMAND ----------
@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC The `%fs` magic command can be use to run file operations. The command below lists the source files in the **volume** that we will be exploring and ingesting.
+# MAGIC The `%fs` magic command can be used to run file operations. The command below lists the source files in the **volume** that we will be exploring and ingesting.
 # MAGIC
 # MAGIC
 
@@ -84,7 +84,7 @@ spark.read.json("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/g
 # MAGIC
 # MAGIC **LAB EXERCISE**
 # MAGIC
-# MAGIC Complete the below code to show the distinct topics avialable in the source data. If you get stuck, you can use the inline-assistant for help. Just look for the assistant icon in the cell (next to the delete cell icon).
+# MAGIC Complete the below code to show the distinct topics available in the source data. If you get stuck, you can use the inline-assistant for help. Just look for the assistant icon in the cell (next to the delete cell icon).
 # MAGIC
 # MAGIC You may notice it takes a little while to execute this query. Why do you think this is? Later on in this lab, once you ingest this table to bronze, try re-running this query again but for the bronze table instead of the raw json data. Was it faster? Why?
 
@@ -97,7 +97,7 @@ spark.read.json("/Volumes/rtlh_lakehouse_labs/bootcamp_oct_2025/resources/data/g
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Now let's dymistify the binary "value" data by enforcing the correct schema, and inspect the bmp data. In this case, the binary data is expected to be in a text-encoded format, so we can cast it directly to `string`.
+# MAGIC Now let's demistify the binary "value" data by enforcing the correct schema, and inspect the bmp data. In this case, the binary data is expected to be in a text-encoded format, so we can cast it directly to `string`.
 
 # COMMAND ----------
 
@@ -134,7 +134,7 @@ df_bpm_parsed.display()
 # MAGIC
 # MAGIC **LAB EXERCISE**
 # MAGIC
-# MAGIC Fill in the appropriate select and group by statement to check for duplicates. Remeber, you can use the assistant to help you out.
+# MAGIC Fill in the appropriate select and group by statement to check for duplicates. Remember, you can use the assistant to help you out.
 
 # COMMAND ----------
 
@@ -149,7 +149,7 @@ spark.sql("""
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Looks like are some duplicates, so we need think about how to handle these when we build our pipeline.
+# MAGIC Looks like there are some duplicates, so we need think about how to handle these when we build our pipeline.
 # MAGIC
 # MAGIC Let's do some extra checks for invalid data. In our gym business, production (customer) device ids start from `102000`, with anything below reserved for testing. Let's see if we have any test devices in our production data. 
 
@@ -225,7 +225,7 @@ df_bronze.write.mode("overwrite").saveAsTable("bronze")
 # MAGIC %md
 # MAGIC **Lab Exercise**
 # MAGIC
-# MAGIC What is *mode* doing here? Why do you think we setting this to *overwrite*? What would happen if we used *append* instead?
+# MAGIC What is *mode* doing here? Why do you think we are setting this to *overwrite*? What would happen if we used *append* instead?
 
 # COMMAND ----------
 
