@@ -12,7 +12,7 @@
 # MAGIC # Lab 2: Spark Declarative Pipelines
 # MAGIC
 # MAGIC ## Objective
-# MAGIC In this lab, you will create and configure a Databricks Spark Declactive pipeline to ingest and transform our gym data from Lab 1. This time, we will support _streaming_, bringing the data incrementally, which allows near real time processing of data once it lands!
+# MAGIC In this lab, you will create and configure a Databricks Spark Declarative pipeline to ingest and transform our gym data from Lab 1. This time, we will support _streaming_, bringing the data incrementally, which allows near real time processing of data once it lands!
 # MAGIC
 
 # COMMAND ----------
