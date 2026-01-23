@@ -113,7 +113,7 @@ df_bpm.display()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We can see that the `value` colmun is json data. We can use the `from_json` function to parse this, then un-nest it using a `select`.
+# MAGIC We can see that the `value` column is json data. We can use the `from_json` function to parse this, then un-nest it using a `select`.
 
 # COMMAND ----------
 
