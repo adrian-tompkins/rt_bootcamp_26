@@ -9,48 +9,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC # Setup Script - Run This
--- MAGIC
--- MAGIC Run the below command to copy datests to your unique schema in the labs environment.
--- MAGIC
--- MAGIC Not required if you already ran this in notebook `1. Dashboard and Visualization Lab Activity`
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC user = spark.sql("select current_user()").collect()[0][0]
--- MAGIC user = user.split('@')[0]
--- MAGIC user = ''.join([c if c.isalnum() else '_' for c in user.lower()])
--- MAGIC
--- MAGIC # Use the catalog rtlh_lakehouse_labs by default
--- MAGIC catalog = "rtlh_lakehouse_labs"
--- MAGIC
--- MAGIC # Use your unqiue sechma, should be of the form labs_user_name
--- MAGIC # Manually update this if your schema is not of that form
--- MAGIC schema = f"labs_{user}"
--- MAGIC
--- MAGIC
--- MAGIC # Use the catalog rtlh_lakehouse_labs by default
--- MAGIC spark.sql(f"use catalog {catalog}")
--- MAGIC
--- MAGIC # Use your unqiue sechma, should be of the form labs_user_name
--- MAGIC # Manually update this if your schema is not of that form
--- MAGIC spark.sql(f"use schema {schema}")
--- MAGIC
--- MAGIC print(f"Catalog: {catalog}")
--- MAGIC print(f"Schema: {schema}")
-
--- COMMAND ----------
-
-create or replace table au_orders as select * from bootcamp_oct_2025.au_orders;
-create or replace table au_opportunities as select * from bootcamp_oct_2025.au_opportunities;
-create or replace table au_customers as select * from bootcamp_oct_2025.au_customers;
-create or replace table au_products as select * from bootcamp_oct_2025.au_products;
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC ## 2.06 Lab - AI/BI Genie Space Development Activity Lab
+-- MAGIC ## AI/BI Genie Space Development Activity Lab
 -- MAGIC
 -- MAGIC AI/BI Genie allows business users to conduct self-serve data analytics using natural language and without coding. After a Genie space is set up by a domain expert such as a data analyst, business users can ask their own questions and generate visualizations to help them understand the data. 
 -- MAGIC
@@ -58,8 +17,8 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC
 -- MAGIC This lesson uses the same following resources as **Lab 1**:
 -- MAGIC - Tables:
--- MAGIC   - Catalog: `rtlh_lakehouse_labs`
--- MAGIC   - Schema: `labs_<username>`
+-- MAGIC   - Catalog: `rtlh_lakehouse_labs` or `lakehouse_labs`
+-- MAGIC   - Schema: `bootcamp_oct_2025`
 -- MAGIC   - Tables:
 -- MAGIC     - au_customers
 -- MAGIC     - au_orders
@@ -71,7 +30,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### A: Create a Genie Space
+-- MAGIC ### Create a Genie Space
 -- MAGIC In this part of the lab, we'll start with creating a Genie space directly from the main Databricks user interface.
 -- MAGIC
 -- MAGIC **📌 NOTE:** Many of the following instructions take place in a non-notebook area of the platform. It is recommended to open either the notebooks in a separate tab or window to reference the instructions alongside the area where they are performed.
@@ -120,7 +79,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### B: Query the Genie space, and leave feedback
+-- MAGIC ### Query the Genie space, and leave feedback
 -- MAGIC
 -- MAGIC Before we allow users into this Genie space, we need to try it out for ourselves. It may be that we need to refine its configuration before it gives helpful answers.
 -- MAGIC
@@ -146,7 +105,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### C: View the feedback and act on it
+-- MAGIC ### View the feedback and act on it
 -- MAGIC
 -- MAGIC Regularly inspecting user feedback, and doing something about it, is the most important ongoing maintenance responsibility of a Genie space.
 -- MAGIC
@@ -158,7 +117,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### D: Share the Genie space
+-- MAGIC ### Share the Genie space
 -- MAGIC
 -- MAGIC Users can't access a Genie space until you share it. 
 -- MAGIC
@@ -171,7 +130,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### E: Create a Genie Space from a Dashboard
+-- MAGIC ### Create a Genie Space from a Dashboard
 -- MAGIC So far, we have been working with a standalone Genie space. Alternatively, you can create a Genie Space directly from a dashboard. Let's explore that choice.
 -- MAGIC
 -- MAGIC 1. Navigate to **Dashboards** in the main Databricks user interface and select your Lab 1 Dashboard. </p>
@@ -199,7 +158,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC %md
 -- MAGIC ### Challenge activity: Explore Opportunities
 -- MAGIC
--- MAGIC If you have time, add more sample questions to the Genie space that relate to the `rtlh_lakehouse_labs.<my_schema>.au_opportunities` table. What kinds of questions might your audience have about the differences among sales opportunities?
+-- MAGIC If you have time, add more sample questions to the Genie space that relate to the `au_opportunities` table. What kinds of questions might your audience have about the differences among sales opportunities?
 
 -- COMMAND ----------
 

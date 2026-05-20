@@ -9,59 +9,20 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC # Setup Script - Run This
--- MAGIC
--- MAGIC Run the below command to copy datests to your unique schema in the labs environment.
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC user = spark.sql("select current_user()").collect()[0][0]
--- MAGIC user = user.split('@')[0]
--- MAGIC user = ''.join([c if c.isalnum() else '_' for c in user.lower()])
--- MAGIC
--- MAGIC # Use the catalog rtlh_lakehouse_labs by default
--- MAGIC catalog = "rtlh_lakehouse_labs"
--- MAGIC
--- MAGIC # Use your unqiue sechma, should be of the form labs_user_name
--- MAGIC # Manually update this if your schema is not of that form
--- MAGIC schema = f"labs_{user}"
--- MAGIC
--- MAGIC
--- MAGIC # Use the catalog rtlh_lakehouse_labs by default
--- MAGIC spark.sql(f"use catalog {catalog}")
--- MAGIC
--- MAGIC # Use your unqiue sechma, should be of the form labs_user_name
--- MAGIC # Manually update this if your schema is not of that form
--- MAGIC spark.sql(f"use schema {schema}")
--- MAGIC
--- MAGIC print(f"Catalog: {catalog}")
--- MAGIC print(f"Schema: {schema}")
-
--- COMMAND ----------
-
-create or replace table au_orders as select * from bootcamp_oct_2025.au_orders;
-create or replace table au_opportunities as select * from bootcamp_oct_2025.au_opportunities;
-create or replace table au_customers as select * from bootcamp_oct_2025.au_customers;
-create or replace table au_products as select * from bootcamp_oct_2025.au_products;
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC ## 1.10 Lab - Dashboard and Visualization Lab Activity
+-- MAGIC ## Dashboard and Visualization Lab Activity
 -- MAGIC
 -- MAGIC Databricks AI/BI Dashboards help you quickly transform data into shareable insights. 
 -- MAGIC
 -- MAGIC In this lesson, you will create a dashboard and make it useful by adding text, data, and interactive visualizations.
 -- MAGIC
 -- MAGIC ### Data Discovery
--- MAGIC The first thing you'll need to complete any data analytics task is the appropriate data for the request. To find the right data, you'll need to use the Catalog Explorer or the Databricks Search to locate the data for this project. The script you ran above will copy tables from a shared common location into a schema you control.
+-- MAGIC The first thing you'll need to complete any data analytics task is the appropriate data for the request. To find the right data, you'll need to use the Catalog Explorer or the Databricks Search to locate the data for this project.
 -- MAGIC
 -- MAGIC To use the Catalog Explorer, follow the steps below.
 -- MAGIC
 -- MAGIC 1. Select **Catalog** from the sidebar navigation.
--- MAGIC 1. In the catalog selector, locate the catalog titled: **rtlh_lakehouse_labs**. You can also use the search at the top to narrow down the available options.
--- MAGIC 1. Expand your `labs_` schema. You should see following tables in this schema.
+-- MAGIC 1. If you are in the Rio Tinto Iron Ore labs environment, locate the: **lakehouse_labs** catalog. Otherwise, find the **rtlh_lakehouse_labs** catalog. You can also use the search at the top to narrow down the available options.
+-- MAGIC 1. Expand the `bootcamp_oct_2025` schema. You should see following tables in this schema.
 -- MAGIC     - au_orders
 -- MAGIC     - au_opportunities
 -- MAGIC     - au_customers
@@ -74,7 +35,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### A: Create a new Dashboard
+-- MAGIC ### Create a new Dashboard
 -- MAGIC The first step in creating a new dashboard in Databricks is to decide upon the business purpose of the dashboard and its audience. For this dashboard, the business purpose will be to provide information on the performance of our Australia sales operation. The intended audience is any employee of our business who supports and evaluates our sellers.
 -- MAGIC
 -- MAGIC **📌 NOTE:** Many of the following instructions take place in a non-notebook area of the platform. It is recommended to open either the notebooks in a separate tab or window to reference the instructions alongside the area where they are performed.
@@ -89,7 +50,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### B: Examine and Augment the Main Dataset
+-- MAGIC ### Examine and Augment the Main Dataset
 -- MAGIC
 -- MAGIC With a completely new Dashboard, you need to associate the dashboard with data before you can begin designing the information display itself. At the top of the dashboard screen, you have two tabs, **Data** and **Untitled page**. 
 -- MAGIC
@@ -99,10 +60,10 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC
 -- MAGIC You start off on the **Untitled page** tab so that you can see the helpful overview that's provided. Select the **Data** tab to get started. 
 -- MAGIC
--- MAGIC There are three small icons on the left side of the **Data** tab's screen area: **Datasets**, **Catalog**, and **Assistant**. 
+-- MAGIC There are three small icons on the left side of the **Data** tab's screen area: **Datasets**, **Catalog**, and **Genie Code**. 
 -- MAGIC * **Datasets** (an icon depicting a list) will present you with a list of all the datasets used for the dashboard. This is where we start; it's empty now.
 -- MAGIC * **Catalog** (the standard Databricks Catalog icon, three tiny shapes) allows you to navigate the available catalogs, schemas, and tables accessible to the workspace and select tables or materialized views to use as datasets.
--- MAGIC * **Assistant** (the standard Databricks Assistant icon, a tiny four-pointed star) provides you with a AI-powered interface for asking queries in natural language to the platform to discover objects or gain insights or assistance on query writing. 
+-- MAGIC * **Genie Code** (the standard Genie Code icon, a tiny four-pointed star) provides you with a AI-powered interface for asking queries in natural language to the platform to discover objects or gain insights or assistance on query writing. 
 -- MAGIC
 -- MAGIC   **📌 NOTE**: 
 -- MAGIC   
@@ -112,10 +73,10 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC 1. With the **Datasets list** icon selected, click the **+ Create from SQL** button. Right-click the newly created query in the **Datasets** list and select **Rename**, or use the kebab menu, to rename the query as **orderhistory**.  
 -- MAGIC
 -- MAGIC
--- MAGIC 2. Let's borrow the SQL editor panel to look at the data in the **au_orders** and **au_customers** table. First, let's see what's in the **au_orders** table. Paste in this query, updating `<my_schema>` accordingly:
+-- MAGIC 2. Let's borrow the SQL editor panel to look at the data in the **au_orders** and **au_customers** table. First, let's see what's in the **au_orders** table. Paste in this query, updating the `lakehouse_labs` to `rtlh_lakehouse_labs` if you are not in the RTIO labs environment:
 -- MAGIC
 -- MAGIC ```
--- MAGIC SELECT * from rtlh_lakehouse_labs.<my_schema>.au_orders LIMIT 10;
+-- MAGIC SELECT * from lakehouse_labs.bootcamp_oct_2025.au_orders LIMIT 10;
 -- MAGIC ```
 -- MAGIC
 -- MAGIC   Then click the **Run** button. 
@@ -125,7 +86,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC 3. Fortunately, our schema contains a **au_customers** table. Use your mouse to clear the previous query from the SQL editor panel and paste this one in instead:
 -- MAGIC
 -- MAGIC ```
--- MAGIC SELECT * from rtlh_lakehouse_labs.<my_schema>.au_customers LIMIT 10;
+-- MAGIC SELECT * from lakehouse_labs.bootcamp_oct_2025.au_customers LIMIT 10;
 -- MAGIC ```
 -- MAGIC
 -- MAGIC   Then click the **Run** button. 
@@ -142,39 +103,39 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC We are now ready to create a table with everything we need to help our dashboard's end users.
 -- MAGIC
 -- MAGIC 1. Be sure that you are in the Databricks user interface window, and in its Dashboards dataset definition screen. The **orderhistory** dataset should be selected. Use your mouse to clear any previous query from the SQL editor panel. 
--- MAGIC 1. Now click the Assistant icon at left. 
--- MAGIC 1. In the Assistant chat box, describe the SQL query you need. 
+-- MAGIC 1. Now click the Genie Code icon at left. 
+-- MAGIC 1. In the Genie Code chat box, describe the SQL query you need. 
 -- MAGIC  Specifically: 
 -- MAGIC  
--- MAGIC     You want a query that returns all the fields in **rtlh_lakehouse_labs.\<your_schema\>.au_orders**, plus the customername, city, and state fields from *rtlh_lakehouse_labs.\<your_schema\>.au_customers**, joining those two tables on the **customerid** field. You also want to pull in the **productname** field from **rtlh_lakehouse_labs.\<your_schema\>.au_products**, joining those two tables on the **product** field. The customer's state should be called **customer_state**.
+-- MAGIC     I want a query that returns all the fields in **lakehouse_labs.bootcamp_oct_2025.au_orders**, plus the customername, city, and state fields from **lakehouse_labs.bootcamp_oct_2025.au_customers**, joining those two tables on the **customerid** field. I also want to pull in the **productname** field from **lakehouse_labs.bootcamp_oct_2025.au_products**, joining those two tables on the **product** field. The customer's state should be called **customer_state**.
 -- MAGIC
 -- MAGIC      Feel free to use the above query description or rewrite it in your own words.
 -- MAGIC
 -- MAGIC  ---
 -- MAGIC **TIPS FOR SUCCESS**
 -- MAGIC
--- MAGIC * You don't have to get the Databricks Assistant to produce the perfect SQL query. Use it to get  close to the goal, and then touch up the final query as needed. 
+-- MAGIC * You don't have to get the Genie Code to produce the perfect SQL query. Use it to get  close to the goal, and then touch up the final query as needed. 
 -- MAGIC
 -- MAGIC * In the context of defining a dashboard, always name tables with their full three-part form: _catalog_._schema_._table_. 
 -- MAGIC
--- MAGIC * Sometimes Databricks Assistant guesses wrong about the exact name of the field that binds two tables together. You can tell it explicitly what field to join on, as we did in our query description above. Or your data engineers can help Databricks Assistant in a more permanent way by defining the underlying tables to have a [constraint clause](https://docs.databricks.com/en/sql/language-manual/sql-ref-syntax-ddl-create-table-constraint.html). 
+-- MAGIC * Sometimes Genie Code guesses wrong about the exact name of the field that binds two tables together. You can tell it explicitly what field to join on, as we did in our query description above. Or your data engineers can help Genie Code in a more permanent way by defining the underlying tables to have a [constraint clause](https://docs.databricks.com/en/sql/language-manual/sql-ref-syntax-ddl-create-table-constraint.html). 
 -- MAGIC
 -- MAGIC ---
 -- MAGIC
 -- MAGIC  Feel free to use the above query description or rewrite it in your own words. 
--- MAGIC 1. Copy the SQL query that Assistant suggests and paste it into the SQL editor panel in the center of the screen (over the words "Start typing...").
--- MAGIC 1. Run your query and see if it works! You may need to adjust it. If there is an error, Assistant will display a "Diagnose error" button to inspect your SQL and offer a corrected query. Copy the new query back into the SQL editor panel, overwriting the previous attempt, and try to run it again. You might need to use the "Diagnose error" button more than once.
+-- MAGIC 1. Copy the SQL query that Genie Code suggests and paste it into the SQL editor panel in the center of the screen (over the words "Start typing...").
+-- MAGIC 1. Run your query and see if it works! You may need to adjust it. If there is an error, Genie Code will display a "Diagnose error" button to inspect your SQL and offer a corrected query. Copy the new query back into the SQL editor panel, overwriting the previous attempt, and try to run it again. You might need to use the "Diagnose error" button more than once.
 -- MAGIC
 -- MAGIC     If you get stuck, a sample query you can use is at the end of this lab exercise. 
 -- MAGIC  
--- MAGIC 1. If you like, you can close the Assistant window by clicking the X at top right. But you can always return to it, with full history, by clicking the Assistant icon.
+-- MAGIC 1. If you like, you can close the Genie Code window by clicking the X at top right. But you can always return to it, with full history, by clicking the Genie Code icon.
 -- MAGIC
 -- MAGIC
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### D: Add a Dataset for the 2024 Sales Goal
+-- MAGIC ### Add a Dataset for the 2024 Sales Goal
 -- MAGIC
 -- MAGIC 1. Still in the **Data** tab, select the **+ Create from SQL** option. 
 -- MAGIC 2. Enter the following query into the query editing space:
@@ -182,7 +143,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC   SELECT 
 -- MAGIC       sum(orderamt) AS Total_Sales, 390000000 AS Sales_Goal 
 -- MAGIC   FROM 
--- MAGIC       rtlh_lakehouse_labs.<my_schema>.au_orders
+-- MAGIC       lakehouse_labs.bootcamp_oct_2025.au_orders
 -- MAGIC   WHERE 
 -- MAGIC       orderdate >= '2024-01-01' AND orderdate <= '2024-12-31' ;
 -- MAGIC
@@ -195,7 +156,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### E: Add Visualizations
+-- MAGIC ### Add Visualizations
 -- MAGIC ---
 -- MAGIC #### Adding a Text Box
 -- MAGIC
@@ -299,24 +260,19 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 
 -- MAGIC %md
 -- MAGIC ---
--- MAGIC #### Adding a bar chart using Databricks Assistant
+-- MAGIC #### Adding a bar chart using Genie Code
 -- MAGIC
--- MAGIC When drafting a dashboard, you can provide a natural language prompt to the Databricks Assistant and it autogenerates a chart based on your request. The Databricks Assistant can help you build charts based on any dataset defined in your dashboard's data tab. Let's try it out.
+-- MAGIC When drafting a dashboard, you can provide a natural language prompt to the Genie Code and it autogenerates a chart based on your request. The Genie Code can help you build charts based on any dataset defined in your dashboard's data tab. Let's try it out.
 -- MAGIC
 -- MAGIC Complete the following steps:
 -- MAGIC
 -- MAGIC 1. Return to the **Untitled page** tab if you navigated away.  
--- MAGIC 1. Click the icon in the palette for adding a visualization.
--- MAGIC 1. Land the new widget on the left side of the canvas underneath the text box. Click in the new widget to give it focus.
--- MAGIC 1. In the "Ask the Assistant to create a chart..." box at the top of your new widget, enter the following prompt:  
+-- MAGIC 1. Click the star icon in the palette to open Genie Code. A side panel will open.
+-- MAGIC 1. Enter the following prompt:  
 -- MAGIC
 -- MAGIC     _Create a bar chart from the orderhistory dataset with productname on the x-axis and orderamt on the y-axis_
--- MAGIC
--- MAGIC 1. Click the paper-airplane icon to generate a response. It may take a moment for the Assistant to provide a visualization.  
--- MAGIC 1. You will get a bar chart that matches the provided description. Click <b>Accept</b> to confirm the visualization meets your needs.  
--- MAGIC
--- MAGIC     If the visualization does not match your description or match the kind of visualization you wanted to create, you can reject or regenerate the response. You can also adjust the configuration of the chart once accepted. 
 -- MAGIC   
+-- MAGIC 1. Review the bar chart, to see if it matches what you asked for. Make adjustments if required. 
 -- MAGIC 1. Change the color of the chart to something other than the default. Use the configuration panel's **Color** section.
 -- MAGIC 1. Check the **Title** box in the configuration panel. Then click on the placeholder widget title on the visualization. Change it by typing over it to **Average Order Amount per Product**.
 -- MAGIC
@@ -326,6 +282,9 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC %md
 -- MAGIC ---
 -- MAGIC #### Adding a pie chart
+-- MAGIC
+-- MAGIC
+-- MAGIC **📌 NOTE:** From here on, feel free to either use Genie Code to add additional widgets, or add them manually if you want to futher familiarise yourself with the dashboard UI. The instructions below describe how to add the additional widgets manually.
 -- MAGIC
 -- MAGIC Let's show how our revenue is distributed among the Australian states by adding a pie chart. To make this pie chart, complete the following steps:
 -- MAGIC
@@ -440,9 +399,24 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### F: Adding another page to the dashboard
+-- MAGIC ### Doing things the easy way with Genie Code
 -- MAGIC
--- MAGIC Sometimes it is helpful to let people browse the underlying data. Let's give that opportunity, but put it on a separate page, so as not to clutter up the main page. 
+-- MAGIC Now that we have created our base dashboard, with a little help from Genie Code, let's hand over the reins to Genie Code and see if we can get it to build the same dashboard from the ground up! 
+-- MAGIC
+-- MAGIC 1. Right click the above image and press "copy image"
+-- MAGIC 1. Create a new Dashboard, and click the picture of the lamp icon at the top right of the screen
+-- MAGIC 1. Paste the image in the chat. Note that to paste images, you must be using the Genie pane on the right hand side of the screen, not the default "Build a dashbord with Genie code" prompt that appears
+-- MAGIC 1. Write the prompt "Build this Dashboard using the lakehouse_labs bootcamp oct 2025 data"
+-- MAGIC 1. Follow the prompts from Genie, and assess what it is doing. It may want to create a [metric view](https://docs.databricks.com/aws/en/business-semantics/metric-views/), which is a semantic model in Unity Catalog. If you have your own schema to write into, ie a `lakehouse_labs.<my_username>` schema, you can tell Genie Code to write it there. Otherwise, you can skip metric view creation and just have it write sql queries as part of the dashboard data.
+-- MAGIC
+-- MAGIC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### Adding another page to the dashboard
+-- MAGIC
+-- MAGIC Sometimes it is helpful to let people browse the underlying data. Let's give that opportunity, but put it on a separate page, so as not to clutter up the main page. You can choose to do this on your original dashboard, or the one Genie Created
 -- MAGIC
 -- MAGIC 1. Return to the **Untitled page** tab if you navigated away.  
 -- MAGIC
@@ -482,7 +456,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### G: Securely share your dashboard
+-- MAGIC ### Securely share your dashboard
 -- MAGIC
 -- MAGIC When your dashboard is complete, to share it with others, you need to publish it. 
 -- MAGIC
@@ -504,7 +478,7 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### H: Establish a refresh schedule
+-- MAGIC ### Establish a refresh schedule
 -- MAGIC
 -- MAGIC A refresh schedule helps you optimize the performance of  dashboards built on datasets that grow and change. You can schedule a regular refresh of the data in your dashboard, thus ensuring that Databricks' cache of data is up-to-date. The refresh schedule dialogue is also where you can manage users' subscriptions to your dashboard. Subscribed users get an email at every refresh with a snapshot image of the first page of the dashboard, as well as a link back to the live dashboard in Databricks.
 -- MAGIC
@@ -536,12 +510,12 @@ create or replace table au_products as select * from bootcamp_oct_2025.au_produc
 -- MAGIC     c.state AS customer_state,
 -- MAGIC     p.productname AS productname
 -- MAGIC FROM 
--- MAGIC     rtlh_lakehouse_labs.<my_schema>.au_orders AS o
+-- MAGIC     lakehouse_labs.bootcamp_oct_2025.au_orders AS o
 -- MAGIC JOIN 
--- MAGIC     rtlh_lakehouse_labs.<my_schema>.au_customers AS c
+-- MAGIC     lakehouse_labs.bootcamp_oct_2025.au_customers AS c
 -- MAGIC     ON o.customerid = c.customerid
 -- MAGIC JOIN 
--- MAGIC     rtlh_lakehouse_labs.<my_schema>.au_products AS p
+-- MAGIC     lakehouse_labs.bootcamp_oct_2025.au_products AS p
 -- MAGIC     ON o.productid = p.productid ;
 -- MAGIC ```
 -- MAGIC
